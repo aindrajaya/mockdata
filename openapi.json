@@ -1,0 +1,111 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Work Orders API",
+    "version": "1.0.0",
+    "description": "Serve work orders in a single response."
+  },
+  "paths": {
+    "/workorders": {
+      "get": {
+        "summary": "List work orders",
+        "operationId": "listWorkOrders",
+        "responses": {
+          "200": {
+            "description": "All work orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOrder"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "WO-000001",
+                    "title": "Calibration - Operations #1",
+                    "description": "Perform calibration for Operations department. Priority: Low",
+                    "status": "Blocked",
+                    "priority": "Low",
+                    "assignee": "Henry Moore",
+                    "department": "Operations",
+                    "workType": "Calibration",
+                    "createdDate": "2025-12-02T01:09:21.131Z",
+                    "dueDate": "2025-12-23T01:09:21.131Z",
+                    "estimatedHours": 26,
+                    "completionPercentage": 98
+                  }
+                ]
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WorkOrder": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "priority",
+          "assignee",
+          "department",
+          "workType",
+          "createdDate",
+          "dueDate",
+          "estimatedHours",
+          "completionPercentage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "assignee": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          },
+          "workType": {
+            "type": "string"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedHours": {
+            "type": "integer"
+          },
+          "completionPercentage": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}
