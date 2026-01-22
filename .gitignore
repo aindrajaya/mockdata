@@ -17,7 +17,6 @@ dist/
 build/
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -25,3 +24,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
+branch_structure.json

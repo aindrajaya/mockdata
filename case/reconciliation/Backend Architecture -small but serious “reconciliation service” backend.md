@@ -1,6 +1,4 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
-# Ok, give me detail separate backend architecture and Backend design (Python, reconciliation‑first) for this mini app demo, and can handle that 2 csv file
+# Backend Reconciliation
 
 A clean way to present this is: one small but serious “reconciliation service” backend, fully typed and idempotent, that ingests those two CSVs and exposes them via a simple HTTP API.[^1]
 

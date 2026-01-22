@@ -1,6 +1,4 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
-# Ok, and then give me the Next.js frontend architecture that can handle heavy data
+# Frontend Reconciliation
 
 A solid architecture here is a Next.js “financial cockpit” optimized for large, filterable tables and fast, safe interactions with the reconciliation API.[^1]
 
