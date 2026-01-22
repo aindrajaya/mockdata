@@ -1,47 +1,801 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "info": {
-    "title": "Work Orders API",
-    "version": "1.0.0",
-    "description": "Serve work orders in a single response."
+    "title": "Reconciliation Service",
+    "description": "Bank transaction and AR invoice reconciliation engine",
+    "version": "1.0.0"
   },
   "paths": {
-    "/workorders": {
+    "/health": {
       "get": {
-        "summary": "List work orders",
-        "operationId": "listWorkOrders",
+        "summary": "Health Check",
+        "description": "Health check endpoint",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
-            "description": "All work orders",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WorkOrder"
-                  }
-                },
-                "example": [
-                  {
-                    "id": "WO-000001",
-                    "title": "Calibration - Operations #1",
-                    "description": "Perform calibration for Operations department. Priority: Low",
-                    "status": "Blocked",
-                    "priority": "Low",
-                    "assignee": "Henry Moore",
-                    "department": "Operations",
-                    "workType": "Calibration",
-                    "createdDate": "2025-12-02T01:09:21.131Z",
-                    "dueDate": "2025-12-23T01:09:21.131Z",
-                    "estimatedHours": 26,
-                    "completionPercentage": 98
-                  }
-                ]
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/bank": {
+      "post": {
+        "summary": "Import Bank Transactions",
+        "description": "Import bank transactions from CSV file\n\nCSV format expected:\n- txn_id, txn_date, account_iban, counterparty_name, description, amount, currency, bank_reference",
+        "operationId": "import_bank_transactions_imports_bank_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_bank_transactions_imports_bank_post"
               }
             }
           },
-          "500": {
-            "description": "Server error"
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/ar": {
+      "post": {
+        "summary": "Import Invoices",
+        "description": "Import AR invoices from CSV file\n\nCSV format expected:\n- invoice_id, invoice_date, due_date, customer_id, customer_name, amount_gross, currency, status",
+        "operationId": "import_invoices_imports_ar_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_invoices_imports_ar_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/suggest": {
+      "post": {
+        "summary": "Run Reconciliation",
+        "description": "Run reconciliation matching rules and generate suggestions\n\nReturns summary of suggestions created and unmatched items",
+        "operationId": "run_reconciliation_reconcile_suggest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileSuggestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/approve": {
+      "post": {
+        "summary": "Approve Suggestions",
+        "description": "Approve and book reconciliation suggestions\n\nCreates reconciliation entries and updates invoice status",
+        "operationId": "approve_suggestions_reconcile_approve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApproveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/reject": {
+      "post": {
+        "summary": "Reject Suggestions",
+        "description": "Reject reconciliation suggestions",
+        "operationId": "reject_suggestions_reconcile_reject_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bank-transactions": {
+      "get": {
+        "summary": "List Bank Transactions",
+        "description": "List bank transactions with filtering and pagination",
+        "operationId": "list_bank_transactions_bank_transactions_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "unmatched | matched | all",
+              "title": "Status"
+            },
+            "description": "unmatched | matched | all"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          },
+          {
+            "name": "counterparty_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Counterparty Name"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "txn_date | amount | counterparty_name",
+              "default": "txn_date",
+              "title": "Sort By"
+            },
+            "description": "txn_date | amount | counterparty_name"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "asc | desc",
+              "default": "asc",
+              "title": "Sort Order"
+            },
+            "description": "asc | desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoices": {
+      "get": {
+        "summary": "List Invoices",
+        "description": "List invoices with filtering, pagination, and remaining balance",
+        "operationId": "list_invoices_invoices_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "open | paid | partially_paid | all",
+              "title": "Status"
+            },
+            "description": "open | paid | partially_paid | all"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          },
+          {
+            "name": "customer_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Customer Name"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "amount_gross | invoice_date | customer_name",
+              "default": "invoice_date",
+              "title": "Sort By"
+            },
+            "description": "amount_gross | invoice_date | customer_name"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "asc | desc",
+              "default": "asc",
+              "title": "Sort Order"
+            },
+            "description": "asc | desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconciliation-suggestions": {
+      "get": {
+        "summary": "List Suggestions",
+        "description": "List reconciliation suggestions with filtering and pagination",
+        "operationId": "list_suggestions_reconciliation_suggestions_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "pending | approved | rejected | all",
+              "title": "Status"
+            },
+            "description": "pending | approved | rejected | all"
+          },
+          {
+            "name": "txn_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Txn Id"
+            }
+          },
+          {
+            "name": "invoice_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "confidence_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Confidence Min"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit": {
+      "get": {
+        "summary": "List Audit Events",
+        "description": "List audit events (append-only timeline)",
+        "operationId": "list_audit_events_audit_get",
+        "parameters": [
+          {
+            "name": "actor_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "system | user | all",
+              "title": "Actor Type"
+            },
+            "description": "system | user | all"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Type"
+            }
+          },
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -49,62 +803,352 @@
   },
   "components": {
     "schemas": {
-      "WorkOrder": {
+      "ApproveRequest": {
+        "properties": {
+          "suggestion_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Suggestion Ids"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id",
+            "default": "test@mail.com"
+          }
+        },
+        "type": "object",
+        "required": [
+          "suggestion_ids"
+        ],
+        "title": "ApproveRequest",
+        "description": "Request schema for approving suggestions"
+      },
+      "ApproveResponse": {
+        "properties": {
+          "approved": {
+            "type": "integer",
+            "title": "Approved"
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected"
+          },
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Errors",
+            "default": []
+          },
+          "reconciliation_entries": {
+            "items": {
+              "$ref": "#/components/schemas/ReconciliationEntryResponse"
+            },
+            "type": "array",
+            "title": "Reconciliation Entries",
+            "default": []
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approved",
+          "rejected",
+          "timestamp"
+        ],
+        "title": "ApproveResponse",
+        "description": "Response schema for approval operation"
+      },
+      "Body_import_bank_transactions_imports_bank_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_bank_transactions_imports_bank_post"
+      },
+      "Body_import_invoices_imports_ar_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_invoices_imports_ar_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "database": {
+            "type": "string",
+            "title": "Database"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "database",
+          "timestamp"
+        ],
+        "title": "HealthResponse",
+        "description": "Response schema for health check"
+      },
+      "ImportError": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "txn_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Txn Id"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "error"
+        ],
+        "title": "ImportError",
+        "description": "Error details for failed import rows"
+      },
+      "ImportResponse": {
+        "properties": {
+          "import_batch_id": {
+            "type": "string",
+            "title": "Import Batch Id"
+          },
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows"
+          },
+          "imported": {
+            "type": "integer",
+            "title": "Imported"
+          },
+          "skipped_duplicates": {
+            "type": "integer",
+            "title": "Skipped Duplicates"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ImportError"
+            },
+            "type": "array",
+            "title": "Errors",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "import_batch_id",
+          "total_rows",
+          "imported",
+          "skipped_duplicates",
+          "failed",
+          "created_at"
+        ],
+        "title": "ImportResponse",
+        "description": "Response schema for import operations"
+      },
+      "ReconcileSuggestRequest": {
+        "properties": {
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version",
+            "default": "v1"
+          }
+        },
+        "type": "object",
+        "title": "ReconcileSuggestRequest",
+        "description": "Request schema for running reconciliation"
+      },
+      "ReconciliationEntryResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "txn_id": {
+            "type": "string",
+            "title": "Txn Id"
+          },
+          "invoice_id": {
+            "type": "string",
+            "title": "Invoice Id"
+          },
+          "amount_applied": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount Applied"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
         "type": "object",
         "required": [
           "id",
-          "title",
-          "description",
-          "status",
-          "priority",
-          "assignee",
-          "department",
-          "workType",
-          "createdDate",
-          "dueDate",
-          "estimatedHours",
-          "completionPercentage"
+          "txn_id",
+          "invoice_id",
+          "amount_applied",
+          "created_at"
         ],
+        "title": "ReconciliationEntryResponse",
+        "description": "Response schema for booked reconciliation entries"
+      },
+      "RejectRequest": {
         "properties": {
-          "id": {
-            "type": "string"
+          "suggestion_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Suggestion Ids"
           },
-          "title": {
-            "type": "string"
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
-          "description": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "priority": {
-            "type": "string"
-          },
-          "assignee": {
-            "type": "string"
-          },
-          "department": {
-            "type": "string"
-          },
-          "workType": {
-            "type": "string"
-          },
-          "createdDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "dueDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "estimatedHours": {
-            "type": "integer"
-          },
-          "completionPercentage": {
-            "type": "integer"
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id",
+            "default": "test@mail.com"
           }
-        }
+        },
+        "type": "object",
+        "required": [
+          "suggestion_ids"
+        ],
+        "title": "RejectRequest",
+        "description": "Request schema for rejecting suggestions"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }
