@@ -2,7 +2,7 @@
 
 A FastAPI-based bank transaction and AR invoice reconciliation engine designed for production use with idempotent operations and full audit trail.
 
-> **📖 For detailed documentation**, see [BACKEND_DOCUMENTATION.md](../BACKEND_DOCUMENTATION.md) - includes user flows, complete API reference, and troubleshooting.
+> **📖 For detailed documentation**, see [BACKEND_DOCUMENTATION.md](../reconciliation_backend/BACKEND_DOCUMENTATION.md) - includes user flows, complete API reference, and troubleshooting.
 
 ## Quick Start
 
